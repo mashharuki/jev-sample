@@ -21,3 +21,4 @@ jev学習・検証用のリポジトリです。
 - [GitHub jev local](https://github.com/Argos1111/jev_local/tree/main)
 - [Typesafe AI プレイグラウンド](https://console.typesafe.ai/playground)
 - [Jev JavaScript & TypeScript SDK Tutorial](https://jevmanual.com/sdk/javascript/)
+- [TypeSafe AI の Jev を TypeScript で試してみた](https://azukiazusa.dev/blog/jev-support-routing/)
