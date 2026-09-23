@@ -19,3 +19,4 @@ jev学習・検証用のリポジトリです。
 - [Zenn - TypeSafeのJevを正しく驚く、それってLLMでできませんか？](https://zenn.dev/nwn/articles/824026c76116e0)
 - [Zenn - 高速判断AI Jevのユースケースとオープン実装を雑にまとめる](https://zenn.dev/karaage0703/articles/jev-use-cases-open-implementations)
 - [GitHub jev local](https://github.com/Argos1111/jev_local/tree/main)
+- [Typesafe AI プレイグラウンド](https://console.typesafe.ai/playground)
