@@ -20,3 +20,4 @@ jev学習・検証用のリポジトリです。
 - [Zenn - 高速判断AI Jevのユースケースとオープン実装を雑にまとめる](https://zenn.dev/karaage0703/articles/jev-use-cases-open-implementations)
 - [GitHub jev local](https://github.com/Argos1111/jev_local/tree/main)
 - [Typesafe AI プレイグラウンド](https://console.typesafe.ai/playground)
+- [Jev JavaScript & TypeScript SDK Tutorial](https://jevmanual.com/sdk/javascript/)
