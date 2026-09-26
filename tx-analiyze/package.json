@@ -1,10 +1,13 @@
 {
   "name": "tx-analiyze",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Base Sepolia transaction analysis with Jev",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "analyze": "node --import tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "biome check .",
+    "format": "biome check --write .",
+    "test": "node --import tsx --test src/*.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,5 +20,16 @@
     }
   },
   "packageManager": "pnpm@11.24.0",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "dotenv": "^18.0.4",
+    "viem": "^2.56.9"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
 }
