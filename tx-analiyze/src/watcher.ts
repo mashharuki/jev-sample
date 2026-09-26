@@ -14,9 +14,12 @@ type WatchOptions = {
     getHead: () => Promise<bigint>;
     getBlock: (number: bigint) => Promise<WatchBlock>;
     analyze: (hash: Hash, blockHash: Hash) => Promise<unknown>;
-    emit: (result: unknown) => void;
+    emit: (result: unknown) => void | Promise<void>;
     report: (message: string) => void;
     pause: () => Promise<void>;
+    resume?: { number: bigint; hash: Hash };
+    onBlockCompleted?: (block: WatchBlock) => Promise<void>;
+    onStart?: (block: WatchBlock) => Promise<void>;
 };
 
 /** ブロック番号を順に処理し、並列キューを作らずに取りこぼしを防ぐ。 */
@@ -45,9 +48,17 @@ export async function watchTransactions(options: WatchOptions) {
 
     const initialHead = await read(getHead);
     if (initialHead === undefined) return processed;
-    let previous = await read(() => getBlock(initialHead));
+    const resume = options.resume;
+    let previous = resume
+        ? await read(() => getBlock(resume.number))
+        : await read(() => getBlock(initialHead));
     if (!previous || signal.aborted) return processed;
-    let next = initialHead + 1n;
+    if (resume && previous.hash !== resume.hash)
+        throw new Error(
+            `保存済みブロック ${resume.number} が再編成されました。監視を停止します。`,
+        );
+    let next = (resume?.number ?? initialHead) + 1n;
+    if (!resume) await options.onStart?.(previous);
     report(
         `監視開始: ブロック ${next} から、後続 ${options.confirmations} ブロックを待って処理します。Ctrl+C で停止。`,
     );
@@ -81,13 +92,19 @@ export async function watchTransactions(options: WatchOptions) {
                 break;
             try {
                 const result = await analyze(hash, block.hash);
-                emit(result);
+                await emit(result);
                 processed++;
             } catch {
                 throw new Error(
                     `判別失敗: ${hash} (ブロック ${next})。未処理の取引を飛ばさず停止します。pnpm analyze ${hash} で詳細を確認してください。`,
                 );
             }
+        }
+        if (
+            !signal.aborted &&
+            (options.limit === undefined || processed < options.limit)
+        ) {
+            await options.onBlockCompleted?.(block);
         }
         previous = block;
         next++;

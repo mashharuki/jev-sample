@@ -20,6 +20,27 @@ cp .env.example .env
 | `ALCHEMY_RPC_URL` | Alchemy の Base Sepolia RPC URL（chain ID: 84532）。実トランザクション取得時に必要 |
 | `ETHEREUM_RPC_URL` | 任意。ブラックリストを取得する Ethereum メインネット RPC URL（chain ID: 1） |
 | `JEV_MODEL` | 任意。既定値は `jev-latest` |
+| `GOOGLE_API_KEY` | Google AI Studio の Gemini API キー。画面での「詳しく解説」に必要。ブラウザには渡さない |
+| `GEMINI_MODEL` | 任意。既定値は `google/gemini-3.1-pro-preview` |
+| `TX_DB_PATH` | 任意。画面向け SQLite の保存先。既定値は `./data/transactions.db` |
+
+## Web UI と Mastra
+
+3つのターミナルで次を実行します。`pnpm worker` は新しい Base Sepolia のブロックを監視し、取得結果と Jev の判別を SQLite に保存します。`pnpm dev:api` は Mastra API/Studio、`pnpm dev:web` は React/Vite の画面です。
+
+```sh
+cd tx-analiyze
+pnpm install
+pnpm worker
+pnpm dev:api
+pnpm dev:web
+```
+
+画面は [http://127.0.0.1:5173](http://127.0.0.1:5173)、Mastra Studio は [http://127.0.0.1:4111](http://127.0.0.1:4111) です。各コマンドを別々のターミナルで起動してください。`GOOGLE_API_KEY` がなくても、取引の監視・Jev の分類・3種類の架空デモ（送金、`unknown`、入力過大による `skipped`）を確認できます。Gemini の解説は実取引を選んで「詳しく解説」を押した場合だけ生成されます。キーは `.env` に置き、`VITE_*` に設定しないでください。
+
+既定の Gemini 3.1 Pro Preview は高度な推論向けのプレビューモデルで、Gemini API の無料枠では利用できません。Google AI Studio のプロジェクトに有料枠が必要です。無料枠で試す場合は `.env` の `GEMINI_MODEL=google/gemini-3.8-flash` に変更できます。
+
+`pnpm worker --decode-only --limit 1` は Jev を呼ばずに1件だけ取得する疎通確認用です。通常の監視は `pnpm worker` で起動してください。保存済みブロックから再開し、途中まで処理したブロックは保存済み取引の再利用で重複 API 呼び出しを避けます。ブロックの連続性が変わった場合は停止し、エラーを画面に表示します。開発中のデータベースは `data/` に保存され、Git の対象外です。
 
 ## 実行
 
@@ -92,7 +113,7 @@ pnpm --silent watch --limit 10 > transactions.jsonl
 - ブロック取得の一時エラーは同じ位置で最大3回試します。取引の取得・判別失敗はハッシュを表示して停止し、その取引を黙って飛ばしません。`pnpm analyze <表示されたハッシュ>` で再確認できます。
 - 入力が40,000文字を超える取引は例外として、`analysisStatus: "skipped"`、`classification: null` と省略理由を出力して次へ進みます。観測データは残し、その取引では Jev API を呼びません。モデルが判断できなかった `unknown` とは異なります。
 - ブロックの親ハッシュ不一致や取引のブロック変更を検出したら停止します。既に出力した取引の事後的な再編成検出・取り消しは未対応です。
-- 進捗の永続保存はありません。再起動するとその時点の最新ブロックの次から監視するため、停止中・前回の処理待ちの取引は自動再開されません。
+- `pnpm watch` は CLI 専用で進捗を保存しません。画面向けの `pnpm worker` は SQLite に進捗を保存します。
 
 ## 対応範囲と読み方
 
@@ -110,6 +131,9 @@ pnpm typecheck
 pnpm check
 pnpm test
 pnpm format
+pnpm build:web
+pnpm --filter tx-monitor-web check
+pnpm --filter tx-monitor-web format
 ```
 
 テストは Node.js の標準テストランナーを使い、デコード・曖昧なシグネチャ・ブラックリスト照合・CLI を検証します。実 RPC／Jev の品質評価は含みません。

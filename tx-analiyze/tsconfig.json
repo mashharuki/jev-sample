@@ -10,5 +10,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "test/analyze.test.ts", "test/decode.test.ts", "test/format.test.ts", "test/watcher.test.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

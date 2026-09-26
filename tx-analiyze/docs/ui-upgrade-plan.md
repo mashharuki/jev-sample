@@ -50,12 +50,12 @@ flowchart LR
 
 ## Google AI Studio の API キーと LLM
 
-Google AI Studio で取得した **Gemini API キー**を、Mastra サーバーの `GOOGLE_API_KEY` に設定する。Mastra の Google モデルルーターがこの変数を読み取るため、初期モデルは `google/gemini-2.5-flash` とし、モデル ID は環境変数で変更可能にする。Mastra の[対応モデル・環境変数](https://mastra.ai/models/providers/google)と、Google の[API キー設定方法](https://ai.google.dev/gemini-api/docs/api-key)を実装時に再確認する。既存の `TYPESAFE_API_KEY`、`ALCHEMY_RPC_URL`、任意の `ETHEREUM_RPC_URL` はサーバー側の設定として継続する。
+Google AI Studio で取得した **Gemini API キー**を、Mastra サーバーの `GOOGLE_API_KEY` に設定する。Mastra の Google モデルルーターがこの変数を読み取るため、初期モデルは `google/gemini-3.1-pro-preview` とし、モデル ID は環境変数で変更可能にする。既定モデルの Gemini API 利用には有料枠が必要で、無料枠では `google/gemini-3.8-flash` を指定する。Mastra の[対応モデル・環境変数](https://mastra.ai/models/providers/google)と、Google の[API キー設定方法](https://ai.google.dev/gemini-api/docs/api-key)を実装時に再確認する。既存の `TYPESAFE_API_KEY`、`ALCHEMY_RPC_URL`、任意の `ETHEREUM_RPC_URL` はサーバー側の設定として継続する。
 
 ```dotenv
 # tx-analiyze/.env の例。実際の値はコミットしない。
 GOOGLE_API_KEY=YOUR_GOOGLE_AI_STUDIO_KEY
-GEMINI_MODEL=google/gemini-2.5-flash
+GEMINI_MODEL=google/gemini-3.1-pro-preview
 ```
 
 Vite の `VITE_*` 変数や React のコードにキーを置かない。説明エージェントには保存済みのデコード結果・イベント・Jev 判別・実行結果から、長さを制限した根拠データだけを渡す。出力は「要約、根拠の参照先、不明な点」の構造として検証する。ABI が不明な取引や `skipped` 取引については、分からない理由を説明し、calldata から未確認の処理を断定しない。ブラックリストの照合結果を LLM に再判定させない。説明文は推定として表示し、元データへ戻れるようにする。

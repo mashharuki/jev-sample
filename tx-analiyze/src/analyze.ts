@@ -26,6 +26,7 @@ export async function analyzeEvidence(evidence: unknown, decodeOnly = false) {
             },
         };
     }
+    const startedAt = performance.now();
     try {
         const client = new TypeSafeClient({ timeout: 30_000 });
         const result = await client.systemOne({
@@ -39,6 +40,7 @@ export async function analyzeEvidence(evidence: unknown, decodeOnly = false) {
             classification: { kind: "ai_estimate", ...result.answers },
             model: result.model,
             usage: result.usage,
+            jevLatencyMs: Math.round(performance.now() - startedAt),
         };
     } catch {
         throw new Error(

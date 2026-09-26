@@ -2,42 +2,27 @@
 
 ## Project Structure & Module Organization
 
-This repository contains Jev/TypeSafe AI learning examples and experiments.
-
-- `ts-sdk-sample/src/index.ts`: minimal support-ticket classification example.
-- `ts-sdk-sample/src/tutorial.ts`: department routing, urgency scoring, and refund detection example.
-- `ts-sdk-sample/`: Bun package with its own dependencies, lockfile, TypeScript configuration, and environment template.
-- `tx-analiyze/`: transaction-analysis scaffold containing only a package manifest. Preserve the existing directory spelling.
-- `docs/quickstart.md`: HTTP API example; `docs/memo.md`: proposed transaction-analysis MVP and tooling.
-- `README.md`: project overview and reference links. No dedicated test or asset directories currently exist.
+This repository contains Jev examples. `ts-sdk-sample/src/` holds Bun-based TypeSafe AI tutorials. The transaction monitor lives in `tx-analiyze/` (keep this spelling): `src/chain.ts` fetches and decodes Base Sepolia evidence, `src/analyze.ts` calls Jev, `src/watcher.ts` implements block-order polling, `src/worker.ts` persists monitored results, `src/storage.ts` owns SQLite, and `src/mastra/` exposes the API and Gemini explainer. `tx-analiyze/web/` is the React/Vite dashboard; `tx-analiyze/test/` contains Node tests. `docs/` holds project notes and the UI upgrade plan.
 
 ## Build, Test, and Development Commands
 
-Run SDK commands from `ts-sdk-sample/`:
+Run transaction commands from `tx-analiyze/` after `pnpm install` and `cp .env.example .env`:
 
-```sh
-cd ts-sdk-sample
-bun install               # Install dependencies using bun.lock
-cp .env.example .env      # Create local configuration; add your API key
-bun run dev              # Run the minimal classification example
-bun run tutorial         # Run the expanded routing example
-bunx tsc --noEmit         # Check types without generating JavaScript
-```
+- `pnpm analyze --demo --decode-only`: inspect synthetic evidence without API calls.
+- `pnpm worker`: monitor new Base Sepolia blocks, classify with Jev, and save results to SQLite. Use `--decode-only --limit 1` for a small RPC smoke test.
+- `pnpm dev:api` and `pnpm dev:web`: run Mastra on port 4111 and the dashboard on port 5173 in separate terminals.
+- `pnpm typecheck`, `pnpm check`, `pnpm test`, `pnpm build:web`: validate TypeScript, Biome, Node tests, and the production UI bundle.
 
-The examples call the live API and require `TYPESAFE_API_KEY`. There is no build script; Bun executes TypeScript directly. `tx-analiyze/package.json` specifies `pnpm@11.24.0`, but has no working application commands; its test script deliberately fails.
+For the Bun example, run `bun run dev` or `bun run tutorial` inside `ts-sdk-sample/`.
 
 ## Coding Style & Naming Conventions
 
-Match existing TypeScript: four-space indentation, double-quoted strings, ES module imports, camelCase variables/functions, and small async entrypoints. Use two-space indentation for JSON. Follow the strict compiler settings, including unchecked-index protection. Preserve API field names such as `refund_requested`.
-
-No formatter or linter is configured. Biome is proposed in `docs/memo.md`, not installed. Keep examples focused; the transaction-analysis plan calls for Japanese Jev context instructions and a minimal script-based MVP.
+Use strict TypeScript, ES module imports, four-space indentation in TypeScript, two-space indentation in JSON, double-quoted strings, and camelCase functions. Run `pnpm format` to apply Biome changes. Keep RPC facts, Jev classifications, and Gemini explanations distinct in data models and UI labels. Preserve integer amounts as strings when serializing chain data.
 
 ## Testing Guidelines
 
-No automated test framework, test naming convention, or coverage threshold is established. For code changes, run the type check and manually exercise the affected example with local credentials. Report validation performed and avoid assertions tied to exact model scores. If adding automated tests, prefer `*.test.ts` beside the relevant source and document the runner command.
+Place transaction tests in `tx-analiyze/test/*.test.ts`; `pnpm test` uses Node's test runner. Cover decoding ambiguity, skipped inputs, block ordering, persistence checkpoints, and API-facing behavior with deterministic fixtures. Do not assert exact AI scores. No coverage threshold is configured. Verify a real RPC flow with `--decode-only` before changing the worker.
 
-## Commit & Pull Request Guidelines
+## Commits, Pull Requests & Secrets
 
-History uses short messages such as `add sample code` and `Update README.md`; no Conventional Commits requirement exists. Prefer concise, descriptive imperative messages over `update`.
-
-Pull requests should explain the change, affected package, and validation results. Link relevant issues and include sanitized sample output for behavioral changes. Keep API keys in ignored `.env` files; never commit credentials or expose them in logs or PR descriptions.
+History uses short descriptive messages; no Conventional Commits requirement exists. Write an imperative summary, and explain behavior and validation in the pull request. Link issues when relevant and include a sanitized UI screenshot for visual changes. Store `TYPESAFE_API_KEY`, `ALCHEMY_RPC_URL`, optional `ETHEREUM_RPC_URL`, and `GOOGLE_API_KEY` in ignored `.env` files. Never expose keys through `VITE_*`, browser responses, logs, or sample output.

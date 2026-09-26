@@ -62,6 +62,28 @@ test("catch-up visits every block in order, handles empty blocks, stops at trans
     assert.equal(run.output.length, 3);
 });
 
+test("resume verifies saved block and checkpoints only complete blocks after awaited writes", async () => {
+    const run = setup();
+    const completed: bigint[] = [];
+    const events: string[] = [];
+    await watchTransactions({
+        ...run.options,
+        resume: { number: 11n, hash: hash(11) },
+        limit: 1,
+        emit: async () => {
+            events.push("saved");
+        },
+        onBlockCompleted: async (block) => {
+            completed.push(block.number);
+            events.push("checkpoint");
+        },
+    });
+    assert.deepEqual(run.blocks, [11n, 12n, 13n]);
+    assert.deepEqual(run.analyzed, [hash(103)]);
+    assert.deepEqual(completed, [12n]);
+    assert.deepEqual(events, ["checkpoint", "saved"]);
+});
+
 test("confirmation delay waits without processing the same head twice", async () => {
     const run = setup();
     const heads = [10n, 12n, 12n, 13n];

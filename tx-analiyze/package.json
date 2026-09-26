@@ -5,10 +5,14 @@
   "scripts": {
     "analyze": "node --import tsx src/index.ts",
     "watch": "node --import tsx src/watch.ts",
+    "worker": "node --import tsx src/worker.ts",
+    "dev:api": "mastra dev",
+    "dev:web": "pnpm --filter tx-monitor-web dev",
+    "build:web": "pnpm --filter tx-monitor-web build",
     "typecheck": "tsc --noEmit",
     "check": "biome check .",
     "format": "biome check --write .",
-    "test": "node --import tsx --test src/*.test.ts"
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,13 +27,17 @@
   "packageManager": "pnpm@11.24.0",
   "type": "module",
   "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@mastra/core": "^1.71.0",
     "@typesafe-ai/sdk": "^0.6.0",
     "dotenv": "^18.0.4",
-    "viem": "^2.56.9"
+    "viem": "^2.56.9",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.14",
     "@types/node": "^26.6.3",
+    "mastra": "^1.31.3",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
