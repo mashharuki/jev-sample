@@ -136,6 +136,8 @@ pnpm --filter tx-monitor-web check
 pnpm --filter tx-monitor-web format
 ```
 
+`pnpm check` は `web/` も含む全体を検査します。Web 側だけを確認・整形したい場合は `pnpm --filter tx-monitor-web check` / `format` を使用してください。
+
 テストは Node.js の標準テストランナーを使い、デコード・曖昧なシグネチャ・ブラックリスト照合・CLI を検証します。実 RPC／Jev の品質評価は含みません。
 
 実装時に [TypeSafe 公式スキル](https://github.com/typesafe-ai/skills/blob/main/skills/typesafe-ai/SKILL.md) と [JavaScript SDK](https://docs.typesafe.ai/sdk/javascript) を参照しています。日本語の分類基準は `src/questions.ts` で変更できます。
