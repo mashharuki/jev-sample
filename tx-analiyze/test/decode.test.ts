@@ -9,14 +9,14 @@ import {
     erc721Abi,
     type Hex,
 } from "viem";
-import { checkBlacklist, isListed } from "./chain.js";
+import { checkBlacklist, isListed } from "../src/chain.js";
 import {
     decodeInput,
     decodeLogs,
     jsonStringify,
     transactionKind,
-} from "./decode.js";
-import { demoEvidence } from "./demo.js";
+} from "../src/decode.js";
+import { demoEvidence } from "../src/demo.js";
 
 const from = "0x1111111111111111111111111111111111111111";
 const to = "0x2222222222222222222222222222222222222222";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { analyzeEvidence } from "./analyze.js";
+import { analyzeEvidence } from "../src/analyze.js";
 
 test("oversized evidence is preserved and explicitly skipped without calling Jev", async (t) => {
     let calls = 0;

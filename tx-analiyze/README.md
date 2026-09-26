@@ -38,11 +38,19 @@ pnpm analyze 0x...
 # RPC 取得とデコードのみ。Jev は呼び出さない
 pnpm analyze 0x... --decode-only
 
+# 端末上でなくても読みやすい表示にする
+pnpm analyze --demo --decode-only --text
+
+# JSON を明示的に出す
+pnpm analyze 0x... --json
+
 # JSON ファイルに保存するときは pnpm の実行ログを抑制
 pnpm --silent analyze --demo --decode-only > result.json
 ```
 
 `evidence` に観測データ、`classification.operation` に Jev の `choice`・`confidence`・`probabilities`、`model` と `usage` に利用情報を出力します。分類は transfer / approval / swap / bridge / mint / burn / account_abstraction / contract_creation / other / unknown です。デコードのみの場合は `classification: null` になります。
+
+端末では日本語の要約を表示します。標準出力をファイルや別のコマンドにつないだ場合は、従来の JSON を出力します。`--json` で JSON、`--text` で日本語表示を強制できます（同時指定不可）。色は端末表示でのみ使い、`NO_COLOR=1` で無効にできます。要約は ABI と Jev の結果を表示するもので、確信度は正解率ではありません。ERC-20 の数量は `decimals` が不明なため最小単位で表示します。
 
 デモは実チェーン上の取引ではありません。実行エラーは標準エラーと終了コード 1 で通知します。
 
@@ -60,6 +68,12 @@ pnpm watch
 # Jev を呼ばずに監視・取得・デコードだけ確認
 pnpm watch --decode-only --limit 10
 
+# 端末以外でも日本語表示にする
+pnpm watch --text --limit 10
+
+# JSON Lines を明示的に出す
+pnpm watch --json --limit 10
+
 # 結果のみ保存。監視状況やエラーは標準エラーに出力
 pnpm --silent watch --limit 10 > transactions.jsonl
 ```
@@ -70,10 +84,11 @@ pnpm --silent watch --limit 10 > transactions.jsonl
 | `--poll-ms 4000` | 4000 | 新規ブロック待機中の確認間隔（ミリ秒、1000以上） |
 | `--confirmations 2` | 2 | 対象ブロックの後続ブロックを何個待つか（0以上）。最終確定の保証ではありません |
 | `--decode-only` | 無効 | Jev の呼び出しを省略 |
+| `--json` / `--text` | 端末では日本語、パイプでは JSON | 出力形式を固定。`--json` は監視時に1行1件の JSON Lines |
 
 - 起動時の最新ブロックの**次のブロック**から監視します。未承認取引の監視や過去取引の一括処理ではありません。
 - ブロック内の全トランザクションを1件ずつ処理します。**通常モードでは取引ごとに Jev API 使用量が発生**します。処理が遅れてもブロックを飛ばさず追跡するため、流量によっては遅延が増えます。処理待ちのブロック数を表示します。
-- 結果は単発モードと同じ内容を JSON Lines（1行1件）で出力します。`Ctrl+C` 時は実行中の1件の完了を待って停止します。
+- 端末では取引ごとの日本語要約を表示します。リダイレクト時と `--json` 指定時は JSON Lines（1行1件）で出力します。監視状況は標準エラーに出力します。`Ctrl+C` 時は実行中の1件の完了を待って停止します。
 - ブロック取得の一時エラーは同じ位置で最大3回試します。取引の取得・判別失敗はハッシュを表示して停止し、その取引を黙って飛ばしません。`pnpm analyze <表示されたハッシュ>` で再確認できます。
 - 入力が40,000文字を超える取引は例外として、`analysisStatus: "skipped"`、`classification: null` と省略理由を出力して次へ進みます。観測データは残し、その取引では Jev API を呼びません。モデルが判断できなかった `unknown` とは異なります。
 - ブロックの親ハッシュ不一致や取引のブロック変更を検出したら停止します。既に出力した取引の事後的な再編成検出・取り消しは未対応です。

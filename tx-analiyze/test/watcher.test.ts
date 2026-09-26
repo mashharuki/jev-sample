@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Hash } from "viem";
-import { analyzeEvidence } from "./analyze.js";
-import { jsonStringify } from "./decode.js";
+import { analyzeEvidence } from "../src/analyze.js";
+import { jsonStringify } from "../src/decode.js";
 import {
     integerOption,
     type WatchBlock,
     watchTransactions,
-} from "./watcher.js";
+} from "../src/watcher.js";
 
 const hash = (number: number) =>
     `0x${number.toString(16).padStart(64, "0")}` as Hash;

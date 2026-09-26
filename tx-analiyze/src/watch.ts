@@ -5,7 +5,7 @@ import { createPublicClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 import { analyzeEvidence } from "./analyze.js";
 import { fetchEvidence } from "./chain.js";
-import { jsonStringify } from "./decode.js";
+import { outputMode, renderResult } from "./format.js";
 import { integerOption, watchTransactions } from "./watcher.js";
 
 config({ quiet: true });
@@ -14,6 +14,8 @@ async function main() {
     const { values } = parseArgs({
         options: {
             "decode-only": { type: "boolean" },
+            json: { type: "boolean" },
+            text: { type: "boolean" },
             limit: { type: "string" },
             "poll-ms": { type: "string" },
             confirmations: { type: "string" },
@@ -22,7 +24,7 @@ async function main() {
     });
     if (values.help) {
         console.log(
-            "pnpm watch [--limit 10] [--decode-only] [--poll-ms 4000] [--confirmations 2]\n起動後の新規ブロックを順に判別します。既定は件数無制限。Ctrl+C で停止。結果は JSON Lines です。",
+            "pnpm watch [--limit 10] [--decode-only] [--json|--text] [--poll-ms 4000] [--confirmations 2]\n起動後の新規ブロックを順に判別します。既定は件数無制限。Ctrl+C で停止。",
         );
         return;
     }
@@ -32,6 +34,11 @@ async function main() {
             : integerOption(values.limit, 10, 1);
     const pollMs = integerOption(values["poll-ms"], 4000, 1000);
     const confirmations = integerOption(values.confirmations, 2, 0);
+    const mode = outputMode({
+        json: values.json,
+        text: values.text,
+        isTTY: process.stdout.isTTY,
+    });
     const rpcUrl = process.env.ALCHEMY_RPC_URL;
     if (!rpcUrl)
         throw new Error(
@@ -105,7 +112,22 @@ async function main() {
                 }
                 return result;
             },
-            emit: (result) => console.log(jsonStringify(result, 0)),
+            emit: (result) => {
+                console.log(
+                    renderResult(
+                        result as Awaited<ReturnType<typeof analyzeEvidence>>,
+                        mode,
+                        {
+                            stream: true,
+                            color:
+                                mode === "text" &&
+                                !!process.stdout.isTTY &&
+                                !process.env.NO_COLOR,
+                        },
+                    ),
+                );
+                if (mode === "text") console.log();
+            },
             report: (message) => console.error(message),
             pause: async () => {
                 try {

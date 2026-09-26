@@ -3,8 +3,8 @@ import { config } from "dotenv";
 import type { Hash } from "viem";
 import { analyzeEvidence } from "./analyze.js";
 import { fetchEvidence } from "./chain.js";
-import { jsonStringify } from "./decode.js";
 import { demoEvidence } from "./demo.js";
+import { outputMode, renderResult } from "./format.js";
 
 config({ quiet: true });
 
@@ -19,15 +19,22 @@ async function main() {
         options: {
             demo: { type: "boolean" },
             "decode-only": { type: "boolean" },
+            json: { type: "boolean" },
+            text: { type: "boolean" },
             help: { type: "boolean", short: "h" },
         },
     });
     if (values.help) {
         console.log(
-            "pnpm analyze <0x transaction hash> [--decode-only]\npnpm analyze --demo [--decode-only]",
+            "pnpm analyze <0x transaction hash> [--decode-only] [--json|--text]\npnpm analyze --demo [--decode-only] [--json|--text]",
         );
         return;
     }
+    const mode = outputMode({
+        json: values.json,
+        text: values.text,
+        isTTY: process.stdout.isTTY,
+    });
 
     // トランザクションハッシュの形式を検証する
     const hash = positionals[0];
@@ -70,8 +77,14 @@ async function main() {
         );
     }
 
+    const result = await analyzeEvidence(evidence, values["decode-only"]);
     console.log(
-        jsonStringify(await analyzeEvidence(evidence, values["decode-only"])),
+        renderResult(result, mode, {
+            color:
+                mode === "text" &&
+                !!process.stdout.isTTY &&
+                !process.env.NO_COLOR,
+        }),
     );
 }
 
