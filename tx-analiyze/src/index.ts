@@ -1,11 +1,10 @@
 import { parseArgs } from "node:util";
-import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { config } from "dotenv";
 import type { Hash } from "viem";
+import { analyzeEvidence } from "./analyze.js";
 import { fetchEvidence } from "./chain.js";
 import { jsonStringify } from "./decode.js";
 import { demoEvidence } from "./demo.js";
-import { questions } from "./questions.js";
 
 config({ quiet: true });
 
@@ -71,43 +70,9 @@ async function main() {
         );
     }
 
-    if (values["decode-only"]) {
-        console.log(jsonStringify({ evidence, classification: null }));
-        return;
-    }
-
-    // Normalize bigint values before sending state; never include environment configuration.
-    const stateJson = jsonStringify(evidence);
-
-    if (stateJson.length > 40_000)
-        throw new Error(
-            "入力が大きすぎます。--decode-only で確認してください（MVP は 40,000 文字まで）。",
-        );
-    try {
-        // Jev の呼び出し
-        const client = new TypeSafeClient({ timeout: 30_000 });
-
-        // Jev の呼び出し
-        const result = await client.systemOne({
-            state: JSON.parse(stateJson),
-            model: process.env.JEV_MODEL || "jev-latest",
-            questions,
-        });
-
-        // Jev の呼び出し結果を出力する
-        console.log(
-            jsonStringify({
-                evidence,
-                classification: { kind: "ai_estimate", ...result.answers },
-                model: result.model,
-                usage: result.usage,
-            }),
-        );
-    } catch {
-        throw new Error(
-            "Jev の呼び出しに失敗しました。API キー、モデル名、利用枠、接続を確認してください。",
-        );
-    }
+    console.log(
+        jsonStringify(await analyzeEvidence(evidence, values["decode-only"])),
+    );
 }
 
 main().catch((error: unknown) => {

@@ -86,10 +86,10 @@ export function transactionKind(
     return "data_to_address_without_code";
 }
 
-export function jsonStringify(value: unknown) {
+export function jsonStringify(value: unknown, space = 2) {
     return JSON.stringify(
         value,
         (_, item) => (typeof item === "bigint" ? item.toString() : item),
-        2,
+        space,
     );
 }
