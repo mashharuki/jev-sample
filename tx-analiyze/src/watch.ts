@@ -94,7 +94,16 @@ async function main() {
                 );
                 if (evidence.transaction.blockHash !== blockHash)
                     throw new Error("取引のブロックが変化しました。");
-                return analyzeEvidence(evidence, values["decode-only"]);
+                const result = await analyzeEvidence(
+                    evidence,
+                    values["decode-only"],
+                );
+                if (result.analysisStatus === "skipped") {
+                    console.error(
+                        `判別省略: ${hash}。${result.reason.message} (${result.reason.inputCharacters}文字)。次の取引へ進みます。`,
+                    );
+                }
+                return result;
             },
             emit: (result) => console.log(jsonStringify(result, 0)),
             report: (message) => console.error(message),

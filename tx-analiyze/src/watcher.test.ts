@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Hash } from "viem";
+import { analyzeEvidence } from "./analyze.js";
 import { jsonStringify } from "./decode.js";
 import {
     integerOption,
@@ -79,6 +80,26 @@ test("confirmation delay waits without processing the same head twice", async ()
     assert.equal(pauses, 2);
     assert.deepEqual(run.blocks, [10n, 11n]);
     assert.deepEqual(run.analyzed, [hash(101)]);
+});
+
+test("oversized transaction emits a skipped result and monitoring continues to the limit", async () => {
+    const run = setup();
+    const count = await watchTransactions({
+        ...run.options,
+        analyze: async (transaction) => {
+            run.analyzed.push(transaction);
+            return transaction === hash(101)
+                ? analyzeEvidence({ input: "a".repeat(50_000) })
+                : analyzeEvidence({ hash: transaction }, true);
+        },
+    });
+    assert.equal(count, 3);
+    assert.deepEqual(run.analyzed, [hash(101), hash(102), hash(103)]);
+    const results = run.output as { analysisStatus: string }[];
+    assert.deepEqual(
+        results.map((result) => result.analysisStatus),
+        ["skipped", "decode_only", "decode_only"],
+    );
 });
 
 test("abort during processing completes one result without starting another", async () => {
