@@ -3,7 +3,10 @@ import { Mastra } from "@mastra/core";
 import { Agent } from "@mastra/core/agent";
 import { registerApiRoute } from "@mastra/core/server";
 import { config } from "dotenv";
-import { z } from "zod";
+import {
+  explanationResponseSchema,
+  normalizeExplanation,
+} from "../explanation.js";
 import {
   getCheckpoint,
   getExplanation,
@@ -18,12 +21,7 @@ import {
 config({ quiet: true });
 
 const model = process.env.GEMINI_MODEL || "google/gemini-3.1-pro-preview";
-const promptVersion = "1";
-const explanationSchema = z.object({
-  summary: z.string().min(1).max(1500),
-  evidence: z.array(z.string().min(1).max(500)).max(8),
-  unknowns: z.array(z.string().min(1).max(500)).max(8),
-});
+const promptVersion = "2";
 
 export const transactionExplainer = new Agent({
   id: "transaction-explainer",
@@ -34,7 +32,9 @@ export const transactionExplainer = new Agent({
 Jev の確信度は正解率ではありません。ABI シグネチャの一致だけで規格準拠を断定しないでください。
 取引が失敗なら意図と実行結果を分けてください。トークンの decimals が不明なら最小単位と説明してください。
 ブラックリストの再判定や未確認のコントラクト内部処理の断定をしないでください。
-evidence には入力 JSON の具体的なフィールド名と値を挙げ、unknowns には不明点を記載してください。`,
+evidence には入力 JSON の具体的なフィールド名と値を挙げ、unknowns には不明点を記載してください。
+evidence と unknowns はそれぞれ重要な順に最大8件とし、関連する項目はまとめてください。
+summary は1500文字以内、evidence と unknowns の各項目は500文字以内にしてください。`,
 });
 
 const inFlight = new Map<string, Promise<Record<string, unknown>>>();
@@ -72,10 +72,10 @@ async function explain(hash: string) {
   const task = (async () => {
     const startedAt = performance.now();
     const response = await transactionExplainer.generate(input, {
-      structuredOutput: { schema: explanationSchema },
+      structuredOutput: { schema: explanationResponseSchema },
       abortSignal: AbortSignal.timeout(90_000),
     });
-    const parsed = explanationSchema.parse(response.object);
+    const parsed = normalizeExplanation(response.object);
     const result = {
       ...parsed,
       model,
